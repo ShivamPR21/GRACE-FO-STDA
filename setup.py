@@ -18,7 +18,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="grace_read",
+    name="grace_fo_stda",
     version="0.0.1",
     author="Shivam Pandey",
     author_email="pandeyshivam2017robotics@gmail.com",

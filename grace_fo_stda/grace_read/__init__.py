@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-tests package
+grace_fo_stda/grace_read package
 """
 
 __version__ = '0.0.1'

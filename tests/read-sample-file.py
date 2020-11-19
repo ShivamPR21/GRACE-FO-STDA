@@ -15,8 +15,6 @@
 # limitations under the License.
 
 
-from grace_read import read
-
 def read_sample_file():
     """
         Load and verify the GRACE and GRACE-FO sample data.

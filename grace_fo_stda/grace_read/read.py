@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+#
 # Copyright 2020 Shivam Pandey
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,13 @@
 # limitations under the License.
 
 """
-tests package
+Read actual data about Spherical Harmonics with the help of header information.
 """
 
-__version__ = '0.0.1'
+from grace_fo_stda.grace_read import read_header
+
+import pandas as pd
+import numpy as np
+
+# def read(files):
+#

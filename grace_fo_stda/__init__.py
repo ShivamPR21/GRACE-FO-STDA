@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright 2020 Shivam Pandey
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
-import numpy as np
+"""
+grace_fo_stda package
+"""
 
-def read(files):
-    """
-
-    :param files: List of strings containing file names
-    :return:
-    """
-    for file in files:
-        pd.read_csv(file, )
-    return spherical_harmonic_coeffs
+__version__ = '0.0.1'
