@@ -21,6 +21,7 @@ Coefficients.
 
 import re
 from datetime import datetime
+import numpy as np
 
 
 def read_header(files):
@@ -35,13 +36,25 @@ def read_header(files):
     for file in files:
         f = open(file, "r")
         line_no = 0
-        header = {"file_name": file}
+        header = {"file_path": file}
         while True:
 
             line_no += 1
 
             line = (f.readline())
             line = line.strip()
+
+            if line.startswith("radius"):
+                line_info = line.split()
+                header.update({"radius": np.double(line_info[1])})
+
+            if line.startswith("earth_gravity_constant"):
+                line_info = line.split()
+                header.update({"earth_gravity_constant": np.double(line_info[1])})
+
+            if line.startswith("max_degree"):
+                line_info = line.split()
+                header.update({"max_degree": int(line_info[1])})
 
             if line.startswith("time_coverage_start"):
                 line_info = re.split(": |T", line)

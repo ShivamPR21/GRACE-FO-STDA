@@ -18,10 +18,33 @@
 Read actual data about Spherical Harmonics with the help of header information.
 """
 
-from grace_fo_stda.grace_read import read_header
-
 import pandas as pd
 import numpy as np
+from grace_fo_stda.grace_read.read_header import read_header
 
-# def read(files):
-#
+
+def read(files):
+    # Temporal anomalies as dictionary
+    temporal_anomaly = {"header_info": [],
+                        "sc_coeffs_mat": []}
+
+    # Read header information about all the files
+    header_info = read_header(files)
+    temporal_anomaly.update({"header_info": header_info})
+
+    sc_coeff_mat = np.zeros([header_info["max_degree"], header_info["max_degree"], 4])
+
+    for i, header in enumerate(header_info):
+        # Get the file name
+        file_path = header["file_path"]
+        skip_lines = header["end_of_head"]
+
+        # Read Spherical Harmonic Coefficients from file
+        lmsc_coeffs = pd.read_csv(file_path, sep='\s+', skiprows=skip_lines, header=None)
+
+        idx = np.int32(lmsc_coeffs.iloc[:, 1:3].values)
+        sc_coeff_mat[idx] = np.float64(lmsc_coeffs.iloc[:, 3:].values)
+
+        temporal_anomaly.update({"sc_coeffs_mat": (temporal_anomaly["sc_coeffs_mat"].append(sc_coeff_mat))})
+
+    return temporal_anomaly
