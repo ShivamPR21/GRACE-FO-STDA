@@ -17,3 +17,7 @@ grace_fo_stda/grace_read package
 """
 
 __version__ = '0.0.1'
+
+from . import read, read_header
+
+__all__ = [read, read_header]

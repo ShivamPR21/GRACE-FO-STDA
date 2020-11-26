@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 #
-# Copyright 2020 Shivam Pandey
+# GRACE-FO-STDA
+# Copyright (C) 2020  Shivam Pandey pandeyshivam2017robotics@gmail.com
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 Header information retrieval for further data processing and directly reading useful information of Spherical Harmonic
@@ -22,6 +24,23 @@ Coefficients.
 import re
 from datetime import datetime
 import numpy as np
+
+
+def parse_datetime(str_):
+    """
+
+    :param str_:
+    """
+    str_info = list(filter(None, re.split(": |T| ", str_)))
+    date_ = datetime.strptime(str_info[1].strip(), "%Y-%m-%d").date()
+    for time_fmt in ["%H:%M:%S.%f", "%H:%M:%S", "%H.%M.%S.%f"]:
+        try:
+            time_ = datetime.strptime(str_info[2].strip(), time_fmt).time()
+            return date_, time_
+        except ValueError:
+            pass
+
+    raise ValueError("The format of time %s is not supported", str_info[2].strip())
 
 
 def read_header(files):
@@ -37,6 +56,7 @@ def read_header(files):
         f = open(file, "r")
         line_no = 0
         header = {"file_path": file}
+        print(file)
         while True:
 
             line_no += 1
@@ -57,16 +77,12 @@ def read_header(files):
                 header.update({"max_degree": int(line_info[1])})
 
             if line.startswith("time_coverage_start"):
-                line_info = re.split(": |T", line)
-                start_date = datetime.strptime(line_info[1].strip(), "%Y-%m-%d").date()
-                start_time = datetime.strptime(line_info[2].strip(), "%H:%M:%S.%f").time()
+                start_date, start_time = parse_datetime(line)
                 header.update({"Start date": start_date,
                                "Start time": start_time})
 
             if line.startswith("time_coverage_end"):
-                line_info = re.split(": |T", line)
-                end_date = datetime.strptime(line_info[1].strip(), "%Y-%m-%d").date()
-                end_time = datetime.strptime(line_info[2].strip(), "%H:%M:%S.%f").time()
+                end_date, end_time = parse_datetime(line)
                 header.update({"End date": end_date,
                                "End time": end_time})
 
