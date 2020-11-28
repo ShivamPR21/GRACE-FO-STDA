@@ -56,7 +56,7 @@ def read_header(files):
         f = open(file, "r")
         line_no = 0
         header = {"file_path": file}
-        print(file)
+        
         while True:
 
             line_no += 1

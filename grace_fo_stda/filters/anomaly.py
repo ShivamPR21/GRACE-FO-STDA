@@ -28,7 +28,8 @@ def get_monthly_mean(sc_coeffs):
                 mean = (mean * n + sc) / (n + 1)
                 n += 1
 
-        for j, sc in enumerate(sc_coeffs["sc_coeffs_mat"]):
-            sc_coeffs["sc_coeffs_mat"][j] = sc-mean
+        for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
+            if i == header["Start date"].month:
+                sc_coeffs["sc_coeffs_mat"][j] = sc-mean
 
     return sc_coeffs
