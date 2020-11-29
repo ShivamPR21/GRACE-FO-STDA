@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy as np
+
+
 def anomaly(sc_coeffs):
     """
 
@@ -21,17 +24,27 @@ def anomaly(sc_coeffs):
     :return:
     """
 
-    sc_coeffs_tmp = sc_coeffs.copy()
+    sc_anomaly_coeffs = {"header_info": sc_coeffs["header_info"],
+                         "sc_anomaly_abs_log": np.array(sc_coeffs["sc_coeffs_mat"], np.float64),
+                         "sc_anomaly_sign": np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"]))}
+
     for i in range(12):
         mean = 0
         n = 0
-        for header, sc in zip(sc_coeffs_tmp["header_info"], sc_coeffs_tmp["sc_coeffs_mat"]):
-            if i+1 == header["Start date"].month:
+        idx = []
+        for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
+            if i + 1 == header["Start date"].month:
                 mean = (mean * n + sc) / (n + 1)
                 n += 1
+                idx.append(j)
 
-        for j, (header, sc) in enumerate(zip(sc_coeffs_tmp["header_info"], sc_coeffs_tmp["sc_coeffs_mat"])):
-            if i+1 == header["Start date"].month:
-                sc_coeffs_tmp["sc_coeffs_mat"][j] = sc-mean
+        idx = np.int32(idx)
+        #
+        # for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
+        #     if i + 1 == header["Start date"].month:
+        anomaly_tmp = np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32)] - mean
+        anomaly_tmp[np.where(np.abs(anomaly_tmp) <= np.float64(1E-20))] = np.float64(1E-26)
+        sc_anomaly_coeffs["sc_anomaly_abs_log"][idx] = np.log10(np.abs(anomaly_tmp))
+        sc_anomaly_coeffs["sc_anomaly_sign"][idx] = np.sign(anomaly_tmp)
 
-    return sc_coeffs_tmp
+    return sc_anomaly_coeffs
