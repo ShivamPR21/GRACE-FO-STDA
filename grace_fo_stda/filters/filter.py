@@ -38,8 +38,8 @@ def gauss_filter(sc_anomaly, gaussian_blur=None):
         mask = np.zeros(np.shape(sc_tmp))
         mask[np.nonzero(sc_tmp)] = 1
 
-        sc_tmp_filtered = gaussian_filter(sc_tmp * mask, sigma=gaussian_blur)
-        weights = gaussian_filter(mask, sigma=gaussian_blur)
+        sc_tmp_filtered = gaussian_filter(sc_tmp * mask, gaussian_blur)
+        weights = gaussian_filter(mask, gaussian_blur)
         sc_tmp_filtered /= weights
         # after normalized convolution, you can choose to delete any data outside the mask:
         sc_tmp_filtered *= mask
