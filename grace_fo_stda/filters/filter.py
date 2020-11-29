@@ -19,10 +19,32 @@ Filter the data read by grace_read function
 """
 
 import numpy as np
-from scipy import fftpack
+from scipy.ndimage.filters import gaussian_filter
+from matplotlib import pyplot as plt
 
-def filter(sc_coeff_dict):
 
+def gauss_filter(sc_anomaly, gaussian_blur=None):
+    """
 
-if __name__="__main__":
-    filter()
+    :param sc_anomaly: anomaly dict
+    :param gaussian_blur:
+    :return:
+    """
+    sc_anomaly_tmp = sc_anomaly.copy()
+    for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_coeffs_mat"])):
+        m_max = np.shape(sc)[1]
+        sc_tmp = np.concatenate((np.fliplr(sc[:, 1:, 1]), sc[:, :, 0]), axis=1)
+
+        mask = np.zeros(np.shape(sc_tmp))
+        mask[np.nonzero(sc_tmp)] = 1
+
+        sc_tmp_filtered = gaussian_filter(sc_tmp * mask)
+        weights = gaussian_filter(mask)
+        sc_tmp_filtered /= weights
+        # after normalized convolution, you can choose to delete any data outside the mask:
+        sc_tmp_filtered *= mask
+
+        sc_anomaly_tmp["sc_coeffs_mat"][i][:, 1:, 1] = np.fliplr(sc_tmp_filtered[:, :m_max - 1])
+        sc_anomaly_tmp["sc_coeffs_mat"][i][:, :, 0] = sc_tmp_filtered[:, m_max - 1:]
+
+    return sc_anomaly_tmp

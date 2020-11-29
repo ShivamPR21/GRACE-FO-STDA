@@ -29,9 +29,10 @@ def read_sample_file():
 
     try:
         data = read(files_path)
+        return True
     except ValueError:
         raise ValueError("The read function has some bug please report it for further actions.")
 
 
 if __name__ == "__main__":
-    read_sample_file()
+    print(read_sample_file())

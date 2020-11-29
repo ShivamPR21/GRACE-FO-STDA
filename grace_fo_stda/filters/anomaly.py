@@ -14,22 +14,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-def get_monthly_mean(sc_coeffs):
+def anomaly(sc_coeffs):
     """
 
     :param sc_coeffs:
     :return:
     """
-    for i in range(1, 12):
+
+    sc_coeffs_tmp = sc_coeffs.copy()
+    for i in range(12):
         mean = 0
         n = 0
-        for header, sc in zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"]):
-            if i == header["Start date"].month:
+        for header, sc in zip(sc_coeffs_tmp["header_info"], sc_coeffs_tmp["sc_coeffs_mat"]):
+            if i+1 == header["Start date"].month:
                 mean = (mean * n + sc) / (n + 1)
                 n += 1
 
-        for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
-            if i == header["Start date"].month:
-                sc_coeffs["sc_coeffs_mat"][j] = sc-mean
+        for j, (header, sc) in enumerate(zip(sc_coeffs_tmp["header_info"], sc_coeffs_tmp["sc_coeffs_mat"])):
+            if i+1 == header["Start date"].month:
+                sc_coeffs_tmp["sc_coeffs_mat"][j] = sc-mean
 
-    return sc_coeffs
+    return sc_coeffs_tmp
