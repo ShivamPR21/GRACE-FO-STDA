@@ -19,5 +19,6 @@ grace_fo_stda package
 __version__ = '0.0.1'
 
 from . import grace_read
+from . import filters
 
-__all__ = [grace_read]
+__all__ = [grace_read, filters]
