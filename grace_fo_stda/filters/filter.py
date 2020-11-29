@@ -33,13 +33,15 @@ def gauss_filter(sc_anomaly, gaussian_blur=None):
     sc_anomaly_tmp = sc_anomaly.copy()
     for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_coeffs_mat"])):
         m_max = np.shape(sc)[1]
+
+        sc = np.float64(sc)
         sc_tmp = np.concatenate((np.fliplr(sc[:, 1:, 1]), sc[:, :, 0]), axis=1)
 
         mask = np.zeros(np.shape(sc_tmp))
         mask[np.nonzero(sc_tmp)] = 1
 
-        sc_tmp_filtered = gaussian_filter(sc_tmp * mask, gaussian_blur)
-        weights = gaussian_filter(mask, gaussian_blur)
+        sc_tmp_filtered = gaussian_filter(sc_tmp * mask, sigma=gaussian_blur)
+        weights = gaussian_filter(mask, sigma=gaussian_blur)
         sc_tmp_filtered /= weights
         # after normalized convolution, you can choose to delete any data outside the mask:
         sc_tmp_filtered *= mask
