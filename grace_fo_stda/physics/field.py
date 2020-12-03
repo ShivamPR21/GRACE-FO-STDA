@@ -123,6 +123,8 @@ class GravityField(EarthPrams):
                 ylmc, ylms = np.float32(ylm.real), np.float32(ylm.imag)
                 ylmc, ylms = np.multiply(pre_multiplier, ylmc.reshape([max_l + 1, max_l + 1])), np.multiply(
                     pre_multiplier, ylms.reshape([max_l + 1, max_l + 1]))
+                ylmc[np.isnan(ylmc)] = 0
+                ylms[np.isnan(ylms)] = 0
                 smd_grid[smd_idx[0], smd_idx[1]] = (self.a * self.rho / 3) * np.sum(
                     [np.multiply(ylmc, act_anomaly[:, :, 0]), np.multiply(ylms, act_anomaly[:, :, 1])])
 
