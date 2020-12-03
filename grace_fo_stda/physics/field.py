@@ -18,8 +18,8 @@ import os
 
 import numpy as np
 import pandas as pd
-import pyshtools as psh
 import scipy.io as sio
+import scipy.special as spc
 from matplotlib import pyplot as plt
 
 from .earthprams import EarthPrams
@@ -88,7 +88,7 @@ class GravityField(EarthPrams):
                 pre_multiplier = np.float64(
                     [(2 * l_range + 1) / (
                             1 + np.interp(l_range, self.love_number[:, 0], self.love_number[:, 1]))]).T.reshape(
-                    max_l + 1, 1, 1)
+                    max_l + 1, 1)
 
                 l, m = np.meshgrid(l_range, l_range)
                 l, m = l.reshape([np.size(l), 1]), m.reshape([np.size(m), 1])
@@ -96,25 +96,31 @@ class GravityField(EarthPrams):
             smd_grid = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
             act_anomaly = np.float64(np.power(10, anomaly))
             act_anomaly[:, :, :2] = np.multiply(np.float64(anomaly_sign), act_anomaly[:, :, :2])
+
+            # plt.imshow(
+            #     np.log10(np.abs(np.concatenate((np.fliplr(act_anomaly[:, 1:, 1]), act_anomaly[:, :, 0]), axis=1))))
+            # plt.colorbar()
+            # plt.show()
             # print(self.smd_idx)
             for (smd_idx, lat, long) in zip(self.smd_idx, self.lat, self.long):
                 # get YLM
-                ylm = psh.expand.spharm(max_l, long, lat)
-                # ylm = spc.sph_harm(m, l, long, lat, ['4pi', 'real', 1, False, False])
-                # ylmc, ylms = np.float64(ylm[0, :, :]), np.float32(ylm.imag)
-                # ylmc, ylms = np.multiply(pre_multiplier, ylmc.reshape([max_l + 1, max_l + 1])), np.multiply(
-                #     pre_multiplier, ylms.reshape([max_l + 1, max_l + 1]))
-                # ylmc[np.isnan(ylmc)] = 0
-                # ylms[np.isnan(ylms)] = 0
-                ylm_ = np.zeros([max_l+1, max_l+1, 2], dtype=np.float64)
-                ylm_[:, :, 0] = ylm[0, :, :]
-                ylm_[:, :, 1] = ylm[1, :, :]
-                ylm_ = np.multiply(pre_multiplier, ylm_)
+                ylm = np.sqrt(4 * np.pi) * spc.sph_harm(m, l, long, lat)
+                ylmc, ylms = np.float64(ylm.real).reshape([max_l + 1, max_l + 1]), np.float64(ylm.imag).reshape(
+                    [max_l + 1, max_l + 1])
 
-                smd_grid[smd_idx[0], smd_idx[1]] = (self.R * self.rho / 3) * np.sum(
-                    [np.multiply(ylm_[:, :, 0], act_anomaly[:, :, 0]),
-                     np.multiply(ylm_[:, :, 0], act_anomaly[:, :, 1])])
-            #
+                ylmc[np.isnan(ylmc)] = 0
+                ylms[np.isnan(ylms)] = 0
+
+                tmp_act_anomaly = np.zeros(np.shape(act_anomaly))
+                tmp_act_anomaly[:, :, 0], tmp_act_anomaly[:, :, 1] = \
+                    np.multiply(ylmc, act_anomaly[:, :, 0]), np.multiply(ylms, act_anomaly[:, :, 1])
+
+                sum_tmp = np.sum(np.sum(tmp_act_anomaly[:, :, :2], axis=2), axis=1)
+                sum_tmp = np.sum(np.multiply(pre_multiplier, sum_tmp))
+                # print(sum_tmp)
+                smd_grid[smd_idx[0], smd_idx[1]] = (self.R * self.rho / 3) * sum_tmp
+
+            # print(np.max(smd_grid), np.min(smd_grid))
             # print(smd_grid[self.smd_idx[:, 0], self.smd_idx[:, 1]])
             # print(smd_grid)
             # plt.imshow(smd_grid)
@@ -129,25 +135,30 @@ class GravityField(EarthPrams):
             smd_grid = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
             act_anomaly = np.float64(np.power(10, mean_anomaly["mean_abs_log"]))
             act_anomaly[:, :, :2] = np.multiply(np.float64(mean_anomaly["mean_sign"]), act_anomaly[:, :, :2])
+            # plt.imshow(
+            #     np.log10(np.abs(np.concatenate((np.fliplr(act_anomaly[:, 1:, 1]), act_anomaly[:, :, 0]), axis=1))))
+            # plt.colorbar()
+            # plt.show()
 
             for (smd_idx, lat, long) in zip(self.smd_idx, self.lat, self.long):
                 # get YLM
-                ylm = psh.expand.spharm(max_l, long, lat)
-                # ylm = spc.sph_harm(m, l, long, lat)
-                # ylmc, ylms = np.float32(ylm.real), np.float32(ylm.imag)
-                # ylmc, ylms = np.multiply(pre_multiplier, ylmc.reshape([max_l + 1, max_l + 1])), np.multiply(
-                #     pre_multiplier, ylms.reshape([max_l + 1, max_l + 1]))
-                # ylmc[np.isnan(ylmc)] = 0
-                # ylms[np.isnan(ylms)] = 0
-                ylm_ = np.zeros([max_l + 1, max_l + 1, 2], dtype=np.float64)
-                ylm_[:, :, 0] = ylm[0, :, :]
-                ylm_[:, :, 1] = ylm[1, :, :]
-                ylm_ = np.multiply(pre_multiplier, ylm_)
+                ylm = np.sqrt(4 * np.pi) * spc.sph_harm(m, l, long, lat)
+                ylmc, ylms = np.float64(ylm.real).reshape([max_l + 1, max_l + 1]), np.float64(ylm.imag).reshape(
+                    [max_l + 1, max_l + 1])
 
-                smd_grid[smd_idx[0], smd_idx[1]] = (self.R * self.rho / 3) * np.sum(
-                    [np.multiply(ylm_[:, :, 0], act_anomaly[:, :, 0]),
-                     np.multiply(ylm_[:, :, 1], act_anomaly[:, :, 1])])
+                ylmc[np.isnan(ylmc)] = 0
+                ylms[np.isnan(ylms)] = 0
 
+                tmp_act_anomaly = np.zeros(np.shape(act_anomaly))
+                tmp_act_anomaly[:, :, 0], tmp_act_anomaly[:, :, 1] = \
+                    np.multiply(ylmc, act_anomaly[:, :, 0]), np.multiply(ylms, act_anomaly[:, :, 1])
+
+                sum_tmp = np.sum(np.sum(tmp_act_anomaly[:, :, :2], axis=2), axis=1)
+                sum_tmp = np.sum(np.multiply(pre_multiplier, sum_tmp))
+                # print(sum_tmp)
+                smd_grid[smd_idx[0], smd_idx[1]] = (self.R * self.rho / 3) * sum_tmp
+
+            # print(np.max(smd_grid), np.min(smd_grid))
             # plt.imshow(np.abs(smd_grid))
             # plt.colorbar()
             # return
