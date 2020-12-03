@@ -18,35 +18,40 @@
 Filter the data read by grace_read function
 """
 
+from copy import copy
+
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
-from matplotlib import pyplot as plt
+from scipy.ndimage.filters import gaussian_filter1d
 
 
-def gauss_filter(sc_anomaly, gaussian_blur=None):
+def gauss_filter(sc_anomaly, gaussian_blur=np.float32([None, None])):
     """
 
     :param sc_anomaly: anomaly dict
     :param gaussian_blur:
     :return:
     """
-    sc_anomaly_tmp = sc_anomaly.copy()
-    for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_coeffs_mat"])):
+    sc_anomaly_tmp = copy(sc_anomaly)
+    for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_anomaly_abs_log"])):
         m_max = np.shape(sc)[1]
 
         sc = np.float64(sc)
         sc_tmp = np.concatenate((np.fliplr(sc[:, 1:, 1]), sc[:, :, 0]), axis=1)
 
-        mask = np.zeros(np.shape(sc_tmp))
-        mask[np.nonzero(sc_tmp)] = 1
+        mask = copy(sc_tmp)
+        mask[np.where(sc_tmp < -18)] = 0
+        mask[np.where(sc_tmp >= -18)] = 1
 
-        sc_tmp_filtered = gaussian_filter(sc_tmp * mask, sigma=gaussian_blur)
-        weights = gaussian_filter(mask, sigma=gaussian_blur)
-        sc_tmp_filtered /= weights
-        # after normalized convolution, you can choose to delete any data outside the mask:
-        sc_tmp_filtered *= mask
+        if gaussian_blur[0] is not None:
+            sc_tmp = gaussian_filter1d(sc_tmp * mask, sigma=gaussian_blur[0], axis=1)
+        else:
+            raise (ValueError("Provide the horizontal blur value."))
 
-        sc_anomaly_tmp["sc_coeffs_mat"][i][:, 1:, 1] = np.fliplr(sc_tmp_filtered[:, :m_max - 1])
-        sc_anomaly_tmp["sc_coeffs_mat"][i][:, :, 0] = sc_tmp_filtered[:, m_max - 1:]
+        if gaussian_blur[1] is not None:
+            sc_tmp = gaussian_filter1d(sc_tmp * mask, sigma=gaussian_blur[1], axis=0) + np.invert(
+                mask.astype(np.bool)).astype(np.int8) * (-26)
+
+        sc_anomaly_tmp["sc_anomaly_abs_log"][i][:, 1:, 1] = np.fliplr(sc_tmp[:, :m_max - 1])
+        sc_anomaly_tmp["sc_anomaly_abs_log"][i][:, :, 0] = sc_tmp[:, m_max - 1:]
 
     return sc_anomaly_tmp

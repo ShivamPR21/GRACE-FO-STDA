@@ -28,8 +28,10 @@ import numpy as np
 
 def parse_datetime(str_):
     """
-
-    :param str_:
+    Parse the date time string in date_time format
+    :param str_: date and time as string
+    :return: date_, time_: date in date time format "%Y-%m-%d", time in date time format
+    "%H:%M:%S.%f", "%H:%M:%S", "%H.%M.%S.%f"
     """
     str_info = list(filter(None, re.split(": |T| ", str_)))
     date_ = datetime.strptime(str_info[1].strip(), "%Y-%m-%d").date()

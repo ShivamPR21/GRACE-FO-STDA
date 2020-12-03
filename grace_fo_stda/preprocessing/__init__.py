@@ -18,6 +18,6 @@ grace_fo_stda/grace_read package
 
 __version__ = '0.0.1'
 
-from . import anomaly, filter
+from . import anomaly, filters
 
-__all__ = [anomaly, filter]
+__all__ = [anomaly, filters]

@@ -42,7 +42,7 @@ def read(files):
     temporal_anomaly.update({"header_info": header_info})
 
     for i, header in enumerate(header_info):
-        sc_coeff_mat = np.zeros([header["max_degree"]+1, header["max_degree"]+1, 4])
+        sc_coeff_mat = np.zeros([header["max_degree"] + 1, header["max_degree"] + 1, 4])
         # Get the file name
         file_path = header["file_path"]
         skip_lines = header["end_of_head"]
@@ -55,5 +55,7 @@ def read(files):
         sc_coeff_mat[idx[:, 0], idx[:, 1]] = np.float64(lmsc_coeffs.iloc[:, 3:].values)
 
         temporal_anomaly["sc_coeffs_mat"].append(sc_coeff_mat)
+
+    temporal_anomaly["sc_coeffs_mat"] = np.float64(temporal_anomaly["sc_coeffs_mat"])
 
     return temporal_anomaly

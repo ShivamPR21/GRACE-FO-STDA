@@ -26,25 +26,41 @@ def anomaly(sc_coeffs):
 
     sc_anomaly_coeffs = {"header_info": sc_coeffs["header_info"],
                          "sc_anomaly_abs_log": np.array(sc_coeffs["sc_coeffs_mat"], np.float64),
-                         "sc_anomaly_sign": np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"]))}
+                         "sc_anomaly_sign": np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"][:, :, :, :2])),
+                         "sc_mean": {}}
 
     for i in range(12):
-        mean = 0
+        mean = np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"][0]))
         n = 0
         idx = []
         for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
             if i + 1 == header["Start date"].month:
-                mean = (mean * n + sc) / (n + 1)
+                # mean = (mean * n + sc) / (n + 1)
+                mean[:, :, :2] += sc[:, :, :2]
+                mean[:, :, 2:] += np.square(sc[:, :, 2:])
                 n += 1
                 idx.append(j)
 
+        mean[:, :, :2] /= n
+        mean[:, :, 2:] = np.sqrt(mean[:, :, 2:] / n)
+
+        tmp_mean = np.copy(mean)
+        tmp_mean[np.where(np.abs(tmp_mean) < 1E-20)] = np.float(1E-26)
+        sc_anomaly_coeffs["sc_mean"].update({"month_" + str(i + 1): {"mean_abs_log": np.log10(np.abs(tmp_mean)),
+                                                                     "mean_sign": np.sign(tmp_mean[:, :, :2])}})
         idx = np.int32(idx)
-        #
-        # for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
-        #     if i + 1 == header["Start date"].month:
-        anomaly_tmp = np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32)] - mean
+
+        anomaly_tmp = np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"][idx.astype(np.int32), :, :, :]),
+                               dtype=np.float32)
+        anomaly_tmp[:, :, :, :2] = np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32), :, :, :2] - mean[:, :, :2]
+
+        std = np.sqrt(
+            np.square(np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32), :, :, 2:]) + np.square(mean[:, :, 2:]))
+
+        anomaly_tmp[:, :, :, 2:] = std
+
         anomaly_tmp[np.where(np.abs(anomaly_tmp) <= np.float64(1E-20))] = np.float64(1E-26)
         sc_anomaly_coeffs["sc_anomaly_abs_log"][idx] = np.log10(np.abs(anomaly_tmp))
-        sc_anomaly_coeffs["sc_anomaly_sign"][idx] = np.sign(anomaly_tmp)
+        sc_anomaly_coeffs["sc_anomaly_sign"][idx] = np.sign(anomaly_tmp[:, :, :, :2])
 
     return sc_anomaly_coeffs

@@ -14,3 +14,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy as np
+
+
+class EarthPrams:
+    """
+    Class containing earth representation related parameters.\n
+    Presently based on WGS84.\n
+    """
+
+    def __init__(self):
+        # WGS84 ellipsoid representation of earth
+        self.rho = np.float32(5515)
+        self.a = np.float32(6378137)
+        self.GM = np.float32(3986004.418E8)
+        self.f_inv = np.float32(298.257223563)
+        self.b = self.a * (self.f_inv - 1) / self.f_inv
+        self.R = (2 * self.a + self.b) / 3
