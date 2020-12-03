@@ -113,7 +113,7 @@ class GravityField(EarthPrams):
         for i in range(12):
             mean_anomaly = anomalies["sc_mean"]["month_" + str(i + 1)]
 
-            smd_grid = np.zeros([self.lat.__len__(), self.long.__len__()], dtype=np.float64)
+            smd_grid = np.zeros([np.max(self.smd_idx[:, 0])+1, np.max(self.smd_idx[:, 1])+1], dtype=np.float64)
             act_anomaly = np.float64(np.power(10, mean_anomaly["mean_abs_log"]))
             act_anomaly[:, :, :2] = np.multiply(np.float64(mean_anomaly["mean_sign"]), act_anomaly[:, :, :2])
 
