@@ -83,15 +83,15 @@ class GravityField(EarthPrams):
                 max_l = header["max_degree"]
                 l_range = np.arange(0, max_l + 1)
 
-                pre_multiplier = np.float32(
+                pre_multiplier = np.float64(
                     [(2 * l_range + 1) / (1 + np.interp(l_range, self.love_number[:, 0], self.love_number[:, 1]))]).T
 
                 l, m = np.meshgrid(l_range, l_range)
                 l, m = l.reshape([np.size(l), 1]), m.reshape([np.size(m), 1])
 
-            smd_grid = np.zeros([np.max(self.smd_idx[:, 0])+1, np.max(self.smd_idx[:, 1])+1])+1E-26
-            act_anomaly = np.power(10, anomaly)
-            act_anomaly[:, :, :2] = np.multiply(anomaly_sign, act_anomaly[:, :, :2])
+            smd_grid = np.zeros([np.max(self.smd_idx[:, 0])+1, np.max(self.smd_idx[:, 1])+1], dtype=np.float64)
+            act_anomaly = np.float64(np.power(10, anomaly))
+            act_anomaly[:, :, :2] = np.multiply(anomaly_sign, np.float64(act_anomaly[:, :, :2]))
             print(self.smd_idx)
             for (smd_idx, lat, long) in zip(self.smd_idx, self.lat, self.long):
                 # get YLM
@@ -99,11 +99,13 @@ class GravityField(EarthPrams):
                 ylmc, ylms = np.float32(ylm.real), np.float32(ylm.imag)
                 ylmc, ylms = np.multiply(pre_multiplier, ylmc.reshape([max_l + 1, max_l + 1])), np.multiply(
                     pre_multiplier, ylms.reshape([max_l + 1, max_l + 1]))
+                ylmc[np.isnan(ylmc)] = 0
+                ylms[np.isnan(ylms)] = 0
                 smd_grid[smd_idx[0], smd_idx[1]] = (self.a * self.rho / 3) * np.sum(
                     [np.multiply(ylmc, act_anomaly[:, :, 0]), np.multiply(ylms, act_anomaly[:, :, 1])])
 
             print(smd_grid[self.smd_idx[:, 0], self.smd_idx[:, 1]])
-            plt.imshow(np.log10(np.abs(smd_grid)))
+            plt.imshow(np.abs(smd_grid))
             plt.colorbar()
             smd_info["smd_anomaly"].append(smd_grid)
             break
