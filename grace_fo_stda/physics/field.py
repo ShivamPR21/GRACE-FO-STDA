@@ -91,8 +91,8 @@ class GravityField(EarthPrams):
 
             smd_grid = np.zeros([np.max(self.smd_idx[:, 0])+1, np.max(self.smd_idx[:, 1])+1], dtype=np.float64)
             act_anomaly = np.float64(np.power(10, anomaly))
-            act_anomaly[:, :, :2] = np.multiply(anomaly_sign, np.float64(act_anomaly[:, :, :2]))
-            print(self.smd_idx)
+            act_anomaly[:, :, :2] = np.multiply(np.float64(anomaly_sign), act_anomaly[:, :, :2])
+            # print(self.smd_idx)
             for (smd_idx, lat, long) in zip(self.smd_idx, self.lat, self.long):
                 # get YLM
                 ylm = spc.sph_harm(l, m, long, lat)
@@ -103,19 +103,19 @@ class GravityField(EarthPrams):
                 ylms[np.isnan(ylms)] = 0
                 smd_grid[smd_idx[0], smd_idx[1]] = (self.a * self.rho / 3) * np.sum(
                     [np.multiply(ylmc, act_anomaly[:, :, 0]), np.multiply(ylms, act_anomaly[:, :, 1])])
-
-            print(smd_grid[self.smd_idx[:, 0], self.smd_idx[:, 1]])
-            plt.imshow(np.abs(smd_grid))
-            plt.colorbar()
+            #
+            # print(smd_grid[self.smd_idx[:, 0], self.smd_idx[:, 1]])
+            # plt.imshow(np.abs(smd_grid))
+            # plt.colorbar()
             smd_info["smd_anomaly"].append(smd_grid)
             break
 
         for i in range(12):
             mean_anomaly = anomalies["sc_mean"]["month_" + str(i + 1)]
 
-            smd_grid = np.zeros([self.lat.__len__(), self.long.__len__()])-10000
-            act_anomaly = np.power(10, mean_anomaly["mean_abs_log"])
-            act_anomaly[:, :, :2] = np.multiply(mean_anomaly["mean_sign"], act_anomaly[:, :, :2])
+            smd_grid = np.zeros([self.lat.__len__(), self.long.__len__()], dtype=np.float64)
+            act_anomaly = np.float64(np.power(10, mean_anomaly["mean_abs_log"]))
+            act_anomaly[:, :, :2] = np.multiply(np.float64(mean_anomaly["mean_sign"]), act_anomaly[:, :, :2])
 
             for (smd_idx, lat, long) in zip(self.smd_idx, self.lat, self.long):
                 # get YLM
@@ -127,6 +127,5 @@ class GravityField(EarthPrams):
                     [np.multiply(ylmc, act_anomaly[:, :, 0]), np.multiply(ylms, act_anomaly[:, :, 1])])
 
             smd_info["smd_mean"].update({"month_" + str(i + 1): smd_grid})
-            break
 
         return smd_info
