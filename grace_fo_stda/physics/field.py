@@ -78,8 +78,7 @@ class GravityField(EarthPrams):
         ylmc, ylms = [], []
 
         smd_info = {"header_info": anomalies["header_info"],
-                    "smd_anomaly": [],
-                    "smd_mean": {}}
+                    "smd_anomaly": []}
 
         for i, (header, anomaly, anomaly_sign) in enumerate(
                 zip(anomalies["header_info"], anomalies["sc_anomaly_abs_log"], anomalies["sc_anomaly_sign"])):

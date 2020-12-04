@@ -17,7 +17,7 @@
 import numpy as np
 
 
-def anomaly(sc_coeffs):
+def anomaly(sc_coeffs, limiting_year = 2014):
     """
 
     :param sc_coeffs:
@@ -34,7 +34,7 @@ def anomaly(sc_coeffs):
         n = 0
         idx = []
         for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
-            if i + 1 == header["Start date"].month:
+            if i + 1 == header["Start date"].month and header["Start date"].year < limiting_year:
                 # mean = (mean * n + sc) / (n + 1)
                 mean[:, :, :2] = np.add(mean[:, :, :2], sc[:, :, :2])
                 mean[:, :, 2:] = np.add(mean[:, :, 2:], np.square(sc[:, :, 2:]))
