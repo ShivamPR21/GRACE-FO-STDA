@@ -36,26 +36,25 @@ def anomaly(sc_coeffs):
         for j, (header, sc) in enumerate(zip(sc_coeffs["header_info"], sc_coeffs["sc_coeffs_mat"])):
             if i + 1 == header["Start date"].month:
                 # mean = (mean * n + sc) / (n + 1)
-                mean[:, :, :2] += sc[:, :, :2]
-                mean[:, :, 2:] += np.square(sc[:, :, 2:])
+                mean[:, :, :2] = np.add(mean[:, :, :2], sc[:, :, :2])
+                mean[:, :, 2:] = np.add(mean[:, :, 2:], np.square(sc[:, :, 2:]))
                 n += 1
                 idx.append(j)
 
-        mean[:, :, :2] /= n
-        mean[:, :, 2:] = np.sqrt(mean[:, :, 2:] / n)
+        mean[:, :, :2] = np.divide(mean[:, :, :2], n)
+        mean[:, :, 2:] = np.sqrt(np.divide(mean[:, :, 2:], n))
 
         tmp_mean = np.copy(mean)
         tmp_mean[np.where(np.abs(tmp_mean) < 1E-20)] = np.float(1E-26)
-        sc_anomaly_coeffs["sc_mean"].update({"month_" + str(i + 1): {"mean_abs_log": np.log10(np.abs(tmp_mean)),
-                                                                     "mean_sign": np.sign(tmp_mean[:, :, :2])}})
+        # sc_anomaly_coeffs["sc_mean"].update({"month_" + str(i + 1): {"mean_abs_log": np.log10(np.abs(tmp_mean)),
+        #                                                              "mean_sign": np.sign(tmp_mean[:, :, :2])}})
         idx = np.int32(idx)
 
         anomaly_tmp = np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"][idx.astype(np.int32), :, :, :]),
                                dtype=np.float32)
-        anomaly_tmp[:, :, :, :2] = np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32), :, :, :2] - mean[:, :, :2]
+        anomaly_tmp[:, :, :, :2] = np.subtract(np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32), :, :, :2], mean[:, :, :2])
 
-        std = np.sqrt(
-            np.square(np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32), :, :, 2:]) + np.square(mean[:, :, 2:]))
+        std = np.sqrt(np.add(np.square(np.array(sc_coeffs["sc_coeffs_mat"])[idx.astype(np.int32), :, :, 2:]), np.square(mean[:, :, 2:])))
 
         anomaly_tmp[:, :, :, 2:] = std
 
