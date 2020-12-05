@@ -25,9 +25,7 @@ def anomaly(sc_coeffs):
     """
 
     sc_anomaly_coeffs = {"header_info": sc_coeffs["header_info"],
-                         "sc_anomaly_abs_log": np.array(sc_coeffs["sc_coeffs_mat"], np.float64),
-                         "sc_anomaly_sign": np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"][:, :, :, :2])),
-                         "sc_mean": {}}
+                         "sc_anomaly": np.array(sc_coeffs["sc_coeffs_mat"], np.float64)}
 
     for i in range(12):
         mean = np.zeros(np.shape(sc_coeffs["sc_coeffs_mat"][0]))
@@ -59,7 +57,8 @@ def anomaly(sc_coeffs):
         anomaly_tmp[:, :, :, 2:] = std
 
         anomaly_tmp[np.where(np.abs(anomaly_tmp) <= np.float64(1E-20))] = np.float64(1E-26)
-        sc_anomaly_coeffs["sc_anomaly_abs_log"][idx] = np.log10(np.abs(anomaly_tmp))
-        sc_anomaly_coeffs["sc_anomaly_sign"][idx] = np.sign(anomaly_tmp[:, :, :, :2])
+        # sc_anomaly_coeffs["sc_anomaly_abs_log"][idx] = np.log10(np.abs(anomaly_tmp))
+        sc_anomaly_coeffs["sc_anomaly"][idx] = np.float64(anomaly_tmp)
+        # sc_anomaly_coeffs["sc_anomaly_sign"][idx] = np.sign(anomaly_tmp[:, :, :, :2])
 
     return sc_anomaly_coeffs

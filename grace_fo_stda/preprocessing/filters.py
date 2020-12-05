@@ -32,7 +32,7 @@ def gauss_filter(sc_anomaly, gaussian_blur=np.float32([None, None])):
     :return:
     """
     sc_anomaly_tmp = copy(sc_anomaly)
-    for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_anomaly_abs_log"])):
+    for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_anomaly"])):
         m_max = np.shape(sc)[1]
 
         sc = np.float64(sc)
@@ -51,7 +51,7 @@ def gauss_filter(sc_anomaly, gaussian_blur=np.float32([None, None])):
             sc_tmp = gaussian_filter1d(sc_tmp * mask, sigma=gaussian_blur[1], axis=0) + np.invert(
                 mask.astype(np.bool)).astype(np.int8) * (-26)
 
-        sc_anomaly_tmp["sc_anomaly_abs_log"][i][:, 1:, 1] = np.fliplr(sc_tmp[:, :m_max - 1])
-        sc_anomaly_tmp["sc_anomaly_abs_log"][i][:, :, 0] = sc_tmp[:, m_max - 1:]
+        sc_anomaly_tmp["sc_anomaly"][i][:, 1:, 1] = np.fliplr(sc_tmp[:, :m_max - 1])
+        sc_anomaly_tmp["sc_anomaly"][i][:, :, 0] = sc_tmp[:, m_max - 1:]
 
     return sc_anomaly_tmp

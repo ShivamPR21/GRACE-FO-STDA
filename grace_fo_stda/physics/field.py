@@ -21,6 +21,7 @@ import pandas as pd
 import scipy.io as sio
 import scipy.special as spc
 from matplotlib import pyplot as plt
+from pyshtools.expand import spharm
 
 from .earthprams import EarthPrams
 
@@ -56,7 +57,7 @@ class GravityField(EarthPrams):
         self.catchment_info = sio.loadmat(self.dir_path + "/params/ctchnms.mat")["ctchnms"]
         catchment = np.concatenate(self.catchment_info[:, 0]).ravel()
         idx = np.concatenate(self.catchment_info[:, 3]).ravel()[np.where(catchment == loc)]
-        # if idx is []:
+
         self.lat, self.long = np.where(self.raster_map["cindx3"] == idx)
 
         self.smd_idx = np.int32([self.lat - np.min(self.lat), self.long - np.min(self.long)]).T
@@ -80,8 +81,8 @@ class GravityField(EarthPrams):
         smd_info = {"header_info": anomalies["header_info"],
                     "smd_anomaly": []}
 
-        for i, (header, anomaly, anomaly_sign) in enumerate(
-                zip(anomalies["header_info"], anomalies["sc_anomaly_abs_log"], anomalies["sc_anomaly_sign"])):
+        for i, (header, anomaly) in enumerate(
+                zip(anomalies["header_info"], anomalies["sc_anomaly"])):
 
             if max_l != header["max_degree"]:
                 max_l = header["max_degree"]
@@ -97,17 +98,33 @@ class GravityField(EarthPrams):
                 l, m = l[valid_lm_idx], m[valid_lm_idx]
 
                 for (lat, long) in zip(self.lat, self.long):
-                    ylm = np.sqrt(4 * np.pi) * spc.sph_harm(m, l, long, lat)
+                    ylm = spharm(max_l, long, lat, '4pi', 'real', 1, False, False)
                     ylmc_, ylms_ = np.zeros([max_l + 1, max_l + 1]), np.zeros([max_l + 1, max_l + 1])
-                    ylmc_[valid_lm_idx] = np.ravel(ylm.real)
-                    ylms_[valid_lm_idx] = np.ravel(ylm.imag)
+                    ylmc_ = ylm[0, :, :]
+                    ylms_ = ylm[1, :, :]
                     ylmc.append(ylmc_)
                     ylms.append(ylms_)
 
-            smd_grid = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
-            act_anomaly = np.float64(np.power(10, anomaly))
-            act_anomaly[:, :, :2] = np.multiply(np.float64(anomaly_sign), act_anomaly[:, :, :2])
+                # print(self.smd_idx[:, 0], self.smd_idx[:, 1])
+                # print(np.int32([self.smd_idx[:, 0]]))
+                plt_var = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
+                for i in range(len(self.smd_idx)):
+                    plt_var[self.smd_idx[i][0], self.smd_idx[i][1]] = ylmc[i][10, 10]
+                plt.imshow(plt_var)
+                plt.colorbar()
+                plt.show()
 
+                for i in range(len(self.smd_idx)):
+                    plt_var[self.smd_idx[i][0], self.smd_idx[i][1]] = ylms[i][10, 10]
+                plt.imshow(plt_var)
+                plt.colorbar()
+                plt.show()
+                # return
+
+            smd_grid = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
+            # act_anomaly = np.float64(np.power(10, anomaly))
+            # act_anomaly[:, :, :2] = np.multiply(np.float64(anomaly_sign), act_anomaly[:, :, :2])
+            act_anomaly = anomaly
             act_anomaly[np.where(np.abs(act_anomaly) < np.float64(1E-20))] = 0
 
             for (smd_idx, ylmc_, ylms_) in zip(self.smd_idx, ylmc, ylms):
@@ -120,6 +137,6 @@ class GravityField(EarthPrams):
 
                 smd_grid[smd_idx[0], smd_idx[1]] = (self.R * self.rho / 3) * sum_tmp
 
-            smd_info["smd_anomaly"].append(smd_grid/1000)
+            smd_info["smd_anomaly"].append(smd_grid)
 
         return smd_info
