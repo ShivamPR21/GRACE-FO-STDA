@@ -28,3 +28,5 @@ This module implements different method to get the regression fit for the spatio
 
 ### Examples
 ```For Usage related information please view the Docs/spatio-temporal-analysis.ipynb```
+
+### The pdf containing documentation is also included in Docs folder. 
