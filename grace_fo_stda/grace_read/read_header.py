@@ -23,6 +23,7 @@ Coefficients.
 
 import re
 from datetime import datetime
+
 import numpy as np
 
 
@@ -58,7 +59,7 @@ def read_header(files):
         f = open(file, "r")
         line_no = 0
         header = {"file_path": file}
-        
+
         while True:
 
             line_no += 1

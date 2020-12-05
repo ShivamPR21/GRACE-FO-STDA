@@ -19,8 +19,6 @@ import os
 import numpy as np
 import pandas as pd
 import scipy.io as sio
-import scipy.special as spc
-from matplotlib import pyplot as plt
 from pyshtools.expand import spharm
 
 from .earthprams import EarthPrams
@@ -28,8 +26,10 @@ from .earthprams import EarthPrams
 
 class GravityField(EarthPrams):
     """
-
+    Class to compute the gravity field related quantities\n
+    Only SMD(Surface mass density) is implented for mote request on gitlab.com/ShivamPR21
     """
+
     def __init__(self):
         self.idx, self.lat, self.long = None, [], []
         self.raster_map = []
@@ -73,7 +73,15 @@ class GravityField(EarthPrams):
         self.long[np.where(self.long < 0)] += 2 * np.pi
 
     def smd(self, anomalies):
+        """
+        Computes SMD for the given filtered or unfiltered sc_anomalies
+        :param anomalies: dict{"header_info": [....],
+                                "sc_anomaly": [....]}
+        :return: smd = {"header_info": [....],
+                        "smd_anomaly": [....]}
+        """
 
+        # Variable definition
         max_l, l, m = None, None, None
         pre_multiplier = None
         ylmc, ylms = [], []
@@ -84,59 +92,45 @@ class GravityField(EarthPrams):
         for i, (header, anomaly) in enumerate(
                 zip(anomalies["header_info"], anomalies["sc_anomaly"])):
 
+            # Compute the Ylm coeffs for defined lat, long
             if max_l != header["max_degree"]:
                 max_l = header["max_degree"]
                 l_range = np.arange(0, max_l + 1)
 
+                # Pre-multiplier transform computation (2*l+1)/(1+k_l)
                 pre_multiplier = np.float64(
                     [(2 * l_range + 1) / (
                             1 + np.interp(l_range, self.love_number[:, 0], self.love_number[:, 1]))]).T.reshape(
                     max_l + 1, 1)
 
-                m, l = np.meshgrid(l_range, l_range)
-                valid_lm_idx = np.where(m <= l)
-                l, m = l[valid_lm_idx], m[valid_lm_idx]
-
+                #  Compute Ylm
                 for (lat, long) in zip(self.lat, self.long):
                     ylm = spharm(max_l, long, lat, '4pi', 'real', 1, False, False)
-                    ylmc_, ylms_ = np.zeros([max_l + 1, max_l + 1]), np.zeros([max_l + 1, max_l + 1])
                     ylmc_ = ylm[0, :, :]
                     ylms_ = ylm[1, :, :]
                     ylmc.append(ylmc_)
                     ylms.append(ylms_)
 
-                # print(self.smd_idx[:, 0], self.smd_idx[:, 1])
-                # print(np.int32([self.smd_idx[:, 0]]))
-                plt_var = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
-                for i in range(len(self.smd_idx)):
-                    plt_var[self.smd_idx[i][0], self.smd_idx[i][1]] = ylmc[i][10, 10]
-                plt.imshow(plt_var)
-                plt.colorbar()
-                plt.show()
-
-                for i in range(len(self.smd_idx)):
-                    plt_var[self.smd_idx[i][0], self.smd_idx[i][1]] = ylms[i][10, 10]
-                plt.imshow(plt_var)
-                plt.colorbar()
-                plt.show()
-                # return
-
+            # Initialize smd grid and compute the smd values for land mass
             smd_grid = np.zeros([np.max(self.smd_idx[:, 0]) + 1, np.max(self.smd_idx[:, 1]) + 1], dtype=np.float64)
-            # act_anomaly = np.float64(np.power(10, anomaly))
-            # act_anomaly[:, :, :2] = np.multiply(np.float64(anomaly_sign), act_anomaly[:, :, :2])
             act_anomaly = anomaly
-            act_anomaly[np.where(np.abs(act_anomaly) < np.float64(1E-20))] = 0
 
             for (smd_idx, ylmc_, ylms_) in zip(self.smd_idx, ylmc, ylms):
                 tmp_act_anomaly = np.zeros(np.shape(act_anomaly))
                 tmp_act_anomaly[:, :, 0], tmp_act_anomaly[:, :, 1] = \
                     np.multiply(ylmc_, act_anomaly[:, :, 0]), np.multiply(ylms_, act_anomaly[:, :, 1])
 
-                sum_tmp = np.sum(np.sum(tmp_act_anomaly[:, :, :2], axis=2), axis=1)
+                sum_tmp = np.sum(tmp_act_anomaly[:, :, :2], axis=2)
+
+                sum_tmp = np.sum(sum_tmp, axis=1, keepdims=True)
+
                 sum_tmp = np.sum(np.multiply(pre_multiplier, sum_tmp))
 
-                smd_grid[smd_idx[0], smd_idx[1]] = (self.R * self.rho / 3) * sum_tmp
+                smd_grid[smd_idx[0], smd_idx[1]] = -(self.R * self.rho / 3) * sum_tmp
 
+            # Update smd information
             smd_info["smd_anomaly"].append(smd_grid)
 
+        # return smd_info = {"header_info": [.....],
+        #                     "smd_anomaly": [.....]}
         return smd_info

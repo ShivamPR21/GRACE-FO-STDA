@@ -19,6 +19,7 @@ Filter the data read by grace_read function
 """
 
 from copy import copy
+from copy import deepcopy
 
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
@@ -26,12 +27,14 @@ from scipy.ndimage.filters import gaussian_filter1d
 
 def gauss_filter(sc_anomaly, gaussian_blur=np.float32([None, None])):
     """
-
+    Function applies the gaussian filters to the sc coefficients, uses 2 times 1D filtering one in the vertical
+    direction amd other in the horizontal direction.
     :param sc_anomaly: anomaly dict
-    :param gaussian_blur:
-    :return:
+    :param gaussian_blur: [vertical blur, horizontal blur]
+    :return: Filtered coefficients
     """
-    sc_anomaly_tmp = copy(sc_anomaly)
+
+    sc_anomaly_tmp = deepcopy(sc_anomaly)
     for i, (header, sc) in enumerate(zip(sc_anomaly_tmp["header_info"], sc_anomaly_tmp["sc_anomaly"])):
         m_max = np.shape(sc)[1]
 
