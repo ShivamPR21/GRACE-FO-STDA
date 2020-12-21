@@ -29,4 +29,24 @@ This module implements different method to get the regression fit for the spatio
 ### Examples
 ```For Usage related information please view the Docs/spatio-temporal-analysis.ipynb```
 
+Follow the following steps to get the things working.
+```
+mkdir grace_temporal_analysis && cd grace_temporal_analysis
+git clone https://gitlab.com/ShivamPR21/grace-fo-stda.git
+git clone https://gitlab.com/ShivamPR21/grace-temporal-data.git
+cd grace-fo-stda
+code .
+```
+
+Run the given .ipynb notebook in Docs folder
+
+### package steup
+```
+mkdir grace_temporal_analysis && cd grace_temporal_analysis
+git clone https://gitlab.com/ShivamPR21/grace-fo-stda.git
+cd grace-fo-stda && python steup.py
+```
+
+After this append the path to this directory in your system path as a python-path.
+
 ### The pdf containing documentation is also included in Docs folder. 
